@@ -14,7 +14,7 @@
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav mr-auto">
                     <li class="form-inline">
-                        <a class="btn btn-outline-secondary" href="">
+                        <a class="btn btn-outline-secondary" href="{% url 'add_snippet_page' %}">
                             Добавить сниппет
                         </a>
                     </li>
@@ -22,9 +22,7 @@
                         <a class="nav-link" href="{% url 'my_snippets' %}">Мои сниппеты</a>
                     </li>
                     <li class="form-inline">
-                        <a class="btn btn-outline-info" href="">
-                            Посмотреть сниппеты
-                        </a>
+                        <a href="{% url 'view_snippets' %}" class="btn btn-primary btn-block">Посмотреть сниппеты</a>
                     </li>
                 </ul>
             </div>

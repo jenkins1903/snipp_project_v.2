@@ -16,16 +16,26 @@ def index_page(request):
 
 
 def add_snippet_page(request):
-    context = {'pagename': 'Добавление нового сниппета'}
+    if request.method == 'POST':
+        form = SnippetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('view_snippets')  # Перенаправление на страницу со списком сниппетов
+    else:
+        form = SnippetForm()
+    
+    context = {'pagename': 'Добавление нового сниппета', 'form': form}
     return render(request, 'pages/add_snippet.html', context)
+
+
 
 
 def snippets_page(request):
     if request.user.is_authenticated:
-        # Для авторизованных пользователей показываем их частные сниппеты и все публичные сниппеты
+
         snippets = Snippet.objects.filter(Q(is_public=True) | Q(author=request.user))
     else:
-        # Для неавторизованных пользователей показываем только публичные сниппеты
+  
         snippets = Snippet.objects.filter(is_public=True)
     return render(request, 'pages/view_snippets.html', {'snippets': snippets})
 
