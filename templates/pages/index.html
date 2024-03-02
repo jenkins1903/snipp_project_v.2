@@ -28,15 +28,15 @@
             <div class="col">
                 <hr>
                 <h4>Найти сниппет по номеру</h4>
-                <form action='' id="view_snippet_form">
+
+                <form action="/snippets/1/" method="get">
                     <div class="form-group row">
-                        <label for="snippet_id" class="col-sm-2 col-form-label col-form-label-lg">Номер:</label>
+                        <label for="snippet_id" class="col-sm-2 col-form-label col-form-label-lg">Номер сниппета:</label>
                         <div class="col-sm-8">
-                            <input type="number" class="form-control form-control-lg" id="snippet_id"
-                                   placeholder="введите число">
+                            <input type="number" class="form-control form-control-lg" id="snippet_id" name="snippet_id" placeholder="Введите ID сниппета">
                         </div>
                         <div class="col-sm-2">
-                            <input type="submit" class="form-control form-control-lg btn btn-info" value="Найти">
+                            <button type="submit" class="btn btn-info btn-lg">Найти</button>
                         </div>
                     </div>
                 </form>
@@ -44,3 +44,14 @@
         </div>
     </div>
 {% endblock %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('search_snippet_form').onsubmit = function() {
+            var snippetId = document.getElementById('snippet_id').value;
+            if (snippetId) {
+                this.action = '/snippets/' + snippetId + '/';
+            }
+            return !!snippetId; 
+        };
+    });
+</script>

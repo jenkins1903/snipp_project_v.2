@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load syntax_highlight %} <!-- Подключение вашего тега шаблона для подсветки кода -->
 
 {% block title %}Просмотр сниппетов - PythonBin{% endblock %}
 
@@ -10,8 +11,14 @@
                 <h1>{{ pagename }}</h1>
                 <hr>
                 <div>
-                    <a href="?show_hidden=true" class="btn btn-info">Показать скрытые сниппеты</a>
-                    <a href="?show_hidden=false" class="btn btn-secondary">Скрыть скрытые сниппеты</a>
+                    <form method="get" action="{% url 'view_snippets' %}">
+                        <select name="lang" onchange="this.form.submit()">
+                            <option value="">Все языки</option>
+                            <option value="Python" {% if selected_language == "Python" %}selected{% endif %}>Python</option>
+                            <option value="JavaScript" {% if selected_language == "JavaScript" %}selected{% endif %}>JavaScript</option>
+                            <option value="C++" {% if selected_language == "C++" %}selected{% endif %}>C++</option>
+                        </select>
+                    </form>
                 </div>
             </div>
         </div>
@@ -29,14 +36,15 @@
                     <thead class="thead-dark">
                     <tr>
                         <th scope="col">ID</th>
-                        <th scope="col">Название</th>
-                        <th scope="col">Дата создания</th>
+                        <th scope="col"><a href="?sort=name">Название</a></th>
+                        <th scope="col"><a href="?sort=creation_date">Дата создания</a></th>
                         <th scope="col">Действия</th>
+                        <th scope="col">Код</th> <!-- Добавление заголовка для колонки с кодом -->
                     </tr>
                     </thead>
                     <tbody>
                     {% for snippet in snippets %}
-                    <tr class="{% if snippet.is_hidden %}table-secondary{% endif %}">
+                    <tr class="{% if not snippet.is_public %}table-secondary{% endif %}">
                         <td>{{ snippet.id }}</td>
                         <td><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.name }}</a></td>
                         <td>{{ snippet.creation_date }}</td>
@@ -47,8 +55,11 @@
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?');">Удалить</button>
                                 </form>
+                            {% else %}
+                                <span>Недоступно</span>
                             {% endif %}
                         </td>
+                        <td><pre>{{ snippet.code|syntax_highlight:"python"|safe }}</pre></td> <!-- Вставка подсвеченного кода -->
                     </tr>
                     {% endfor %}
                     </tbody>

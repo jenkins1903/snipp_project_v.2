@@ -10,18 +10,18 @@
             <div class="col">
                 {% if snippets %}
                     <table class="table">
-                        <!-- Заголовки таблицы -->
+                   
                         <tr>
                             <th>Название</th>
                             <th>Дата создания</th>
-                            <!-- Другие поля -->
+                    
                         </tr>
-                        <!-- Вывод сниппетов -->
+         
                         {% for snippet in snippets %}
                             <tr>
                                 <td><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.name }}</a></td>
                                 <td>{{ snippet.created_at }}</td>
-                                <!-- Другие поля -->
+                    
                             </tr>
                         {% endfor %}
                     </table>

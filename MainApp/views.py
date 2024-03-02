@@ -8,6 +8,9 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .forms import SignUpForm
+from .forms import CommentForm
+from django.http import HttpResponseRedirect
+from django.contrib import messages
 
 
 def index_page(request):
@@ -20,10 +23,10 @@ def add_snippet_page(request):
         form = SnippetForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('view_snippets')  # Перенаправление на страницу со списком сниппетов
+            messages.success(request, 'Сниппет успешно создан')
+            return redirect('view_snippets')
     else:
         form = SnippetForm()
-    
     context = {'pagename': 'Добавление нового сниппета', 'form': form}
     return render(request, 'pages/add_snippet.html', context)
 
@@ -31,22 +34,43 @@ def add_snippet_page(request):
 
 
 def snippets_page(request):
-    if request.user.is_authenticated:
+    language = request.GET.get('lang', '')
+    sort = request.GET.get('sort', 'creation_date')  
 
-        snippets = Snippet.objects.filter(Q(is_public=True) | Q(author=request.user))
+    
+    if sort not in ['name', 'creation_date', 'language']:  
+        sort = 'creation_date'  
+    if request.user.is_authenticated:
+        if language:  
+            snippets = Snippet.objects.filter(
+                (Q(is_public=True) | Q(author=request.user)) & Q(lang=language)
+            ).order_by(sort)
+        else:  
+            snippets = Snippet.objects.filter(Q(is_public=True) | Q(author=request.user)).order_by(sort)
     else:
-  
-        snippets = Snippet.objects.filter(is_public=True)
-    return render(request, 'pages/view_snippets.html', {'snippets': snippets})
+        if language:  
+            snippets = Snippet.objects.filter(is_public=True, lang=language).order_by(sort)
+        else:  
+            snippets = Snippet.objects.filter(is_public=True).order_by(sort)
+
+    languages = Snippet.objects.values_list('lang', flat=True).distinct()
+    return render(request, 'pages/view_snippets.html', {'snippets': snippets, 'languages': languages, 'selected_language': language, 'current_sort': sort})
 
 
 def snippet_detail(request, id):
-    snippet = get_object_or_404(Snippet, pk=id)  
-    return render(request, 'pages/snippet_detail.html', {'snippet': snippet})
+    snippet = get_object_or_404(Snippet, pk=id)
+    comment_form = CommentForm()  
+    context = {
+        'snippet': snippet,
+        'comment_form': comment_form  
+    }
+    return render(request, 'pages/snippet_detail.html', context)
+
 
 def snippet_delete(request, id):
     snippet = get_object_or_404(Snippet, pk=id)
     snippet.delete()
+    messages.success(request, 'Сниппет успешно удален')
     return redirect('view_snippets')
 
 def snippet_edit(request, id):
@@ -55,7 +79,8 @@ def snippet_edit(request, id):
         form = SnippetForm(request.POST, instance=snippet)
         if form.is_valid():
             form.save()
-            return redirect('view_snippets')  
+            messages.success(request, 'Сниппет успешно обновлен')
+            return redirect('view_snippets')
     else:
         form = SnippetForm(instance=snippet)
     return render(request, 'pages/edit_snippet.html', {'form': form, 'snippet': snippet})
@@ -69,18 +94,22 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('view_snippets')  
+            messages.success(request, 'Вы успешно авторизованы')
+            return redirect('view_snippets')
         else:
-
-            return render(request, 'pages/login.html', {'error': 'Invalid username or password'})
+            messages.error(request, 'Неверное имя пользователя или пароль')
+            return render(request, 'pages/login.html')
     else:
         return render(request, 'pages/login.html')
     
 
 def my_snippets(request):
 
-    snippets = Snippet.objects.filter(author=request.user)
-    return render(request, 'pages/my_snippets.html', {'snippets': snippets})
+    sort = request.GET.get('sort', 'creation_date')  
+    if sort not in ['name', 'creation_date']:  
+        sort = 'creation_date'
+    snippets = Snippet.objects.filter(author=request.user).order_by(sort)
+    return render(request, 'your_template_for_my_snippets.html', {'snippets': snippets})
 
 def signup(request):
     if request.method == 'POST':
@@ -91,7 +120,20 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('home')  
+            messages.success(request, 'Вы успешно зарегистрировались')
+            return redirect('home')
     else:
         form = SignUpForm()
     return render(request, 'pages/signup.html', {'form': form})
+
+
+def comment_add(request, snippet_id):  
+    if request.method == 'POST':
+        form = CommentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.author = request.user
+            new_comment.snippet = get_object_or_404(Snippet, id=snippet_id)  
+            new_comment.save()
+            return HttpResponseRedirect(f'/snippets/{snippet_id}/')  
+    return HttpResponseRedirect('/some_fallback_view/')

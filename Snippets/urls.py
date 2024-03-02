@@ -15,4 +15,5 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('my_snippets/', views.my_snippets, name='my_snippets'),
     path('signup/', views.signup, name='signup'),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    path('snippets/<int:snippet_id>/comment/add', views.comment_add, name='comment_add'),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
