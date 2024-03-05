@@ -11,33 +11,42 @@ from .forms import SignUpForm
 from .forms import CommentForm
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.views import LoginView
 
-
+@csrf_protect
 def index_page(request):
     context = {'pagename': 'PythonBin'}
     return render(request, 'pages/index.html', context)
 
 
+@csrf_protect
+@login_required
 def add_snippet_page(request):
     if request.method == 'POST':
         form = SnippetForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Сниппет успешно создан')
-            return redirect('view_snippets')
+            snippet = form.save(commit=False)  
+            snippet.author = request.user      
+            snippet.save()                     
+            return redirect('view_snippets')   
     else:
         form = SnippetForm()
     context = {'pagename': 'Добавление нового сниппета', 'form': form}
     return render(request, 'pages/add_snippet.html', context)
 
-
-
-
+@csrf_protect
 def snippets_page(request):
+    if request.method == 'GET':
+        snippet_id = request.GET.get('snippet_id')
+        if snippet_id:
+            return redirect('snippet_detail', id=snippet_id)
+    
+
     language = request.GET.get('lang', '')
     sort = request.GET.get('sort', 'creation_date')  
 
-    
     if sort not in ['name', 'creation_date', 'language']:  
         sort = 'creation_date'  
     if request.user.is_authenticated:
@@ -57,6 +66,7 @@ def snippets_page(request):
     return render(request, 'pages/view_snippets.html', {'snippets': snippets, 'languages': languages, 'selected_language': language, 'current_sort': sort})
 
 
+@csrf_protect
 def snippet_detail(request, id):
     snippet = get_object_or_404(Snippet, pk=id)
     comment_form = CommentForm()  
@@ -67,11 +77,12 @@ def snippet_detail(request, id):
     return render(request, 'pages/snippet_detail.html', context)
 
 
+@csrf_protect
 def snippet_delete(request, id):
     snippet = get_object_or_404(Snippet, pk=id)
     snippet.delete()
     messages.success(request, 'Сниппет успешно удален')
-    return redirect('view_snippets')
+    return redirect('pages/view_snippets')
 
 def snippet_edit(request, id):
     snippet = get_object_or_404(Snippet, pk=id)
@@ -80,13 +91,13 @@ def snippet_edit(request, id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Сниппет успешно обновлен')
-            return redirect('view_snippets')
+            return redirect('pages/view_snippets')
     else:
         form = SnippetForm(instance=snippet)
     return render(request, 'pages/edit_snippet.html', {'form': form, 'snippet': snippet})
 
 
-
+@csrf_protect
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -103,14 +114,16 @@ def login_view(request):
         return render(request, 'pages/login.html')
     
 
+@csrf_protect
+@login_required
 def my_snippets(request):
-
-    sort = request.GET.get('sort', 'creation_date')  
-    if sort not in ['name', 'creation_date']:  
+    sort = request.GET.get('sort', 'creation_date')
+    if sort not in ['name', 'creation_date']:
         sort = 'creation_date'
     snippets = Snippet.objects.filter(author=request.user).order_by(sort)
-    return render(request, 'your_template_for_my_snippets.html', {'snippets': snippets})
+    return render(request, 'pages/my_snippets.html', {'snippets': snippets})
 
+@csrf_protect
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -126,7 +139,7 @@ def signup(request):
         form = SignUpForm()
     return render(request, 'pages/signup.html', {'form': form})
 
-
+@csrf_protect
 def comment_add(request, snippet_id):  
     if request.method == 'POST':
         form = CommentForm(request.POST, request.FILES)
@@ -137,3 +150,8 @@ def comment_add(request, snippet_id):
             new_comment.save()
             return HttpResponseRedirect(f'/snippets/{snippet_id}/')  
     return HttpResponseRedirect('/some_fallback_view/')
+
+
+class MyLoginView(LoginView):
+    template_name = 'pages/login.html'
+    success_url = '/snippets/list'

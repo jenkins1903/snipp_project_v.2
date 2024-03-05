@@ -6,10 +6,12 @@ from django.forms import ModelForm
 from .models import Comment
 
 
+
 class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
-        fields = ['name', 'code', 'is_hidden']
+        fields = ['name', 'lang', 'code', 'is_hidden']
+
   
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(max_length=254, help_text='Required. Inform a valid email address.')

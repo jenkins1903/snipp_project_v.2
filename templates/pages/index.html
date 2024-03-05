@@ -18,9 +18,49 @@
             </div>
         </div>
 
+        <!-- Форма входа -->
         <div class="row mt-3">
-            <div class="col-4 offset-4">
-                <a href="{% url 'add_snippet_page' %}" class="btn btn-secondary btn-block">Добавить сниппет</a>
+            <div class="col">
+                <h3>Войти</h3>
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Пароль:</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Форма регистрации -->
+        <div class="row mt-3">
+            <div class="col">
+                <h3>Регистрация</h3>
+                <form method="post" action="{% url 'signup' %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password1">Пароль:</label>
+                        <input type="password" class="form-control" id="password1" name="password1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password2">Повторите пароль:</label>
+                        <input type="password" class="form-control" id="password2" name="password2" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+                </form>
             </div>
         </div>
 
@@ -28,8 +68,8 @@
             <div class="col">
                 <hr>
                 <h4>Найти сниппет по номеру</h4>
-
-                <form action="/snippets/1/" method="get">
+        
+                <form action="{% url 'view_snippets' %}" method="get">
                     <div class="form-group row">
                         <label for="snippet_id" class="col-sm-2 col-form-label col-form-label-lg">Номер сниппета:</label>
                         <div class="col-sm-8">
@@ -44,14 +84,3 @@
         </div>
     </div>
 {% endblock %}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('search_snippet_form').onsubmit = function() {
-            var snippetId = document.getElementById('snippet_id').value;
-            if (snippetId) {
-                this.action = '/snippets/' + snippetId + '/';
-            }
-            return !!snippetId; 
-        };
-    });
-</script>
