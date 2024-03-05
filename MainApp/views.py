@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.views import LoginView
+from django.urls import reverse
 
 @csrf_protect
 def index_page(request):
@@ -84,6 +85,7 @@ def snippet_delete(request, id):
     messages.success(request, 'Сниппет успешно удален')
     return redirect('pages/view_snippets')
 
+
 def snippet_edit(request, id):
     snippet = get_object_or_404(Snippet, pk=id)
     if request.method == 'POST':
@@ -91,7 +93,8 @@ def snippet_edit(request, id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Сниппет успешно обновлен')
-            return redirect('pages/view_snippets')
+            snippet_detail_url = reverse('pages/snippet_detail', args=[id])
+            return HttpResponseRedirect(snippet_detail_url)
     else:
         form = SnippetForm(instance=snippet)
     return render(request, 'pages/edit_snippet.html', {'form': form, 'snippet': snippet})
